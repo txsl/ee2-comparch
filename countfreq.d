@@ -1,0 +1,1 @@
+countfreq.o: countfreq.s

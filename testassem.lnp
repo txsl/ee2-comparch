@@ -1,0 +1,4 @@
+--cpu ARM7TDMI "countfreq.o" --strict --scatter "testassem.sct" 
+--autoat --summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\testassem.map" -o "testassem.axf"

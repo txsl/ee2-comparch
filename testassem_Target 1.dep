@@ -1,0 +1,2 @@
+Dependencies for Project 'testassem', Target 'Target 1': (DO NOT MODIFY !)
+F (.\countfreq.s)(0x4EE1D3DC)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I "C:\Keil\ARM\CMSIS\Include" -I "C:\Keil\ARM\INC\Philips" --list "countfreq.lst" --xref -o "countfreq.o" --depend "countfreq.d")
