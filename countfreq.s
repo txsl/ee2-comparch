@@ -133,11 +133,26 @@ Reset_Handler
 				; constant data used in counting loop
 
 START		    ; initialse	 counting loop
-
+				MOV R1, #0				; Set the 'history' on the pins to be 0
+				MOV R4, #0				; Set the total count to 0
+				MOV R5, #0
+				MOV R6, #0
+				MOV R7, #0
+				MOV R8, #0
+				
+				
 				; main couting loop loops forever, interrupted at end of simulation
 LOOP		
+				LDR R2, Addr_IOPIN 		; Move IO status to R1
+				EOR R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
+				ADD R4, R4, R3
 				B 		LOOP			; For skeleton code only, replace with counting loop which
 										; branches to LOOP_END on termination of loop
+										
+SHIFT_SUMS
+				AND R9, R4, #0xFF			; Sum for p0
+				ADD R5, R5, R9
+				B		LOOP
 
 
 
