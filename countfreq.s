@@ -133,31 +133,69 @@ Reset_Handler
 				; constant data used in counting loop
 
 START		    ; initialse	 counting loop
+										; R0 used as 'scratch' register
 				MOV R1, #0				; Set the 'history' on the pins to be 0
 				MOV R4, #0				; Set the total count to 0
-				MOV R5, #0
-				MOV R6, #0
-				MOV R7, #0
-				MOV R8, #0
+				MOV R5, #0				; Total transitions in p0
+				MOV R6, #0				; Total transitions in p1
+				MOV R7, #0				; Total transitions in p2
+				MOV R8, #0				; Total transitions in p3
+				MOV R9, #0xFF			; Used to set mask for AND when calculating
+				MOV R10, #255			; Counts down from 255 to 0 to detect when to loop
+				LDR R11, =0x01010101	; Mask to AND with before processing IOPIN values
+				LDR R12, Addr_IOPIN		; Mem location of IOPIN
+				
 				
 				
 				; main couting loop loops forever, interrupted at end of simulation
 LOOP		
-				LDR R2, Addr_IOPIN 		; Move IO status to R1
+				LDR R2, [R12]			; Move IO status to R2
+				AND R2, R11, R2
 				EOR R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
+				MOV R1, R2				; Remember what R1 was
 				ADD R4, R4, R3
-				B 		LOOP			; For skeleton code only, replace with counting loop which
-										; branches to LOOP_END on termination of loop
-										
+				SUBS R10, R10, #1
+				BMI		FINISH
+				BEQ 	REGULAR_SHIFT			; For skeleton code only, replace with counting loop which
+				B LOOP						; branches to LOOP_END on termination of loop
+
+FINAL_SHIFT
+				MOV R10, #-1
+				B SHIFT_SUMS
+REGULAR_SHIFT
+				MOV R10, #255
+				B SHIFT_SUMS
 SHIFT_SUMS
-				AND R9, R4, #0xFF			; Sum for p0
-				ADD R5, R5, R9
+				AND R0, R4, #0xFF		; Remove other registers for to find number of p0 transitions
+				ADD R5, R5, R0
+				
+				AND R0, R9, R4, lsr #8
+				ADD R6, R6, R0
+				
+				AND R0, R9, R4, lsr #16
+				ADD R7, R7, R0
+				
+				AND R0, R9, R4, lsr #24
+				ADD R8, R8, R0
+				
+				MOV R4, #0;
+
 				B		LOOP
 
-
+FINISH
+				LDR R12, =P0COUNT
+				STR R5, [R12]
+				LDR R12, =P1COUNT
+				STR R6, [R12]
+				LDR R12, =P2COUNT
+				STR R7, [R12]
+				LDR R12, =P3COUNT
+				STR R8, [R12]
+				
+				B LOOP_END
 
 ISR_FUNC								; Interrupt must set variable to terminate main loop
-				B 		LOOP_END		; for skeleton code only		
+				B FINAL_SHIFT			; for skeleton code only		
 										; replace this by return from interrupt
 										; branch to LOOP_END will be at end of LOOP code
 
@@ -165,7 +203,7 @@ ISR_FUNC								; Interrupt must set variable to terminate main loop
 ; PARAMETERS TO CONTROL SIMULATION, VALUES MAY BE CHANGED TO IMPLEMENT DIFFERENT TESTS
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
-SIM_TIME 		DCD  	100	  ; length of simulation in cycles (100MHz clock)
+SIM_TIME 		DCD  	50000	  ; length of simulation in cycles (100MHz clock)
 P0_PERIOD		DCD   	40        ; bit 0 input period in cycles
 P1_PERIOD		DCD   	34		  ; bit 8 input period in cycles
 P2_PERIOD		DCD  	44		  ; bit 16 input period	in cycles
