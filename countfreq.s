@@ -184,13 +184,20 @@ SHIFT_SUMS
 
 FINISH
 				LDR R12, =P0COUNT
-				STR R5, [R12]
+				LSR R0, R5, #1
+				STR R0, [R12]
+				
 				LDR R12, =P1COUNT
-				STR R6, [R12]
+				LSR R0, R6, #1
+				STR R0, [R12]
+				
 				LDR R12, =P2COUNT
-				STR R7, [R12]
+				LSR R0, R7, #1
+				STR R0, [R12]
+				
 				LDR R12, =P3COUNT
-				STR R8, [R12]
+				LSR R0, R8, #1
+				STR R0, [R12]
 				
 				B LOOP_END
 
@@ -204,10 +211,10 @@ ISR_FUNC								; Interrupt must set variable to terminate main loop
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
 SIM_TIME 		DCD  	50000	  ; length of simulation in cycles (100MHz clock)
-P0_PERIOD		DCD   	40        ; bit 0 input period in cycles
-P1_PERIOD		DCD   	34		  ; bit 8 input period in cycles
-P2_PERIOD		DCD  	44		  ; bit 16 input period	in cycles
-P3_PERIOD		DCD		38		  ; bit 24 input period	in cycles
+P0_PERIOD		DCD   	30        ; bit 0 input period in cycles
+P1_PERIOD		DCD   	30		  ; bit 8 input period in cycles
+P2_PERIOD		DCD  	30		  ; bit 16 input period	in cycles
+P3_PERIOD		DCD		30		  ; bit 24 input period	in cycles
 ;---------------------DO NOT CHANGE AFTER THIS COMMENT---------------------------------------
 ;--------------------------------------------------------------------------------------------
 ;--------------------------------------------------------------------------------------------
