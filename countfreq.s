@@ -151,7 +151,7 @@ START		    ; initialse	 counting loop
 LOOP		
 				LDR R2, [R12]			; Move IO status to R2
 				AND R2, R11, R2
-				EOR R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
+				BIC R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
 				MOV R1, R2				; Remember what R1 was
 				ADD R4, R4, R3
 				SUBS R10, R10, #1
@@ -184,20 +184,16 @@ SHIFT_SUMS
 
 FINISH
 				LDR R12, =P0COUNT
-				LSR R0, R5, #1
-				STR R0, [R12]
+				STR R5, [R12]
 				
 				LDR R12, =P1COUNT
-				LSR R0, R6, #1
-				STR R0, [R12]
+				STR R6, [R12]
 				
 				LDR R12, =P2COUNT
-				LSR R0, R7, #1
-				STR R0, [R12]
+				STR R7, [R12]
 				
 				LDR R12, =P3COUNT
-				LSR R0, R8, #1
-				STR R0, [R12]
+				STR R8, [R12]
 				
 				B LOOP_END
 
@@ -210,11 +206,11 @@ ISR_FUNC								; Interrupt must set variable to terminate main loop
 ; PARAMETERS TO CONTROL SIMULATION, VALUES MAY BE CHANGED TO IMPLEMENT DIFFERENT TESTS
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
-SIM_TIME 		DCD  	50000	  ; length of simulation in cycles (100MHz clock)
-P0_PERIOD		DCD   	30        ; bit 0 input period in cycles
-P1_PERIOD		DCD   	30		  ; bit 8 input period in cycles
-P2_PERIOD		DCD  	30		  ; bit 16 input period	in cycles
-P3_PERIOD		DCD		30		  ; bit 24 input period	in cycles
+SIM_TIME 		DCD  	100000	  ; length of simulation in cycles (100MHz clock)
+P0_PERIOD		DCD   	26        ; bit 0 input period in cycles
+P1_PERIOD		DCD   	26		  ; bit 8 input period in cycles
+P2_PERIOD		DCD  	26		  ; bit 16 input period	in cycles
+P3_PERIOD		DCD		26		  ; bit 24 input period	in cycles
 ;---------------------DO NOT CHANGE AFTER THIS COMMENT---------------------------------------
 ;--------------------------------------------------------------------------------------------
 ;--------------------------------------------------------------------------------------------
