@@ -135,6 +135,7 @@ Addr_FIOPIN		DCD		0x3FFFC014
 Addr_FIOMASK	DCD		0x3FFFC010
 Addr_SCS		DCD		0xE01FC1A0
 
+LTORG
 START		    ; initialse	 counting loop
 				LDR R0, Addr_SCS		; These three lines set the MCU to use the FIOPIN interface, rather than IOPIN
 				MOV R1, #1				; bit0 = 1 enables FIOPIN usage (all other bits must be 0)
@@ -144,7 +145,7 @@ START		    ; initialse	 counting loop
 				LDR R1, =0xFEFEFEFE		; All others are ignored. This saves the commented out AND command in the main Loop.
 				STR R1, [R0]
 				
-										; R0 used as 'scratch' register
+				MOV R0, #0				; R0 used as 'scratch' register
 				MOV R1, #0				; Set the 'history' on the pins to be 0
 				MOV R4, #0				; Set the total count to 0
 				MOV R5, #0				; Total transitions in p0
@@ -152,31 +153,33 @@ START		    ; initialse	 counting loop
 				MOV R7, #0				; Total transitions in p2
 				MOV R8, #0				; Total transitions in p3
 				MOV R9, #0xFF			; Used to set mask for AND when calculating
-				MOV R10, #255			; Counts down from 255 to 0 to detect when to loop
+				MOV R10, #10			; Counts down from 255 to 0 to detect when to loop
 				LDR R11, =0x01010101	; Mask to AND with before processing IOPIN values
 				LDR R12, Addr_FIOPIN		; Mem location of IOPIN
 				;todo add 1 in each byte so the mask is set correctly.
-				
-				
-				; main couting loop loops forever, interrupted at end of simulation
-LOOP		
+				B M_LOOP
+				LTORG
+
+M_LOOP
+				GBLA count
+count			SETA 0
+
+				WHILE count <=255
+
+;				IF count = {50}
+;					NOP
+;				ENDIF
+count			SETA count+1
 				LDR R2, [R12]			; Move IO status to R2
 			;	AND R2, R11, R2
 				BIC R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
-				MOV R1, R2				; R1 stores the previous state of the pins
+				MOV R1, R2				; R1 arstores the previous state of the pins
 				ADD R4, R4, R3
-				SUBS R10, R10, #1
-				BMI		FINISH
-				BEQ 	REGULAR_SHIFT			; For skeleton code only, replace with counting loop which
-				B LOOP						; branches to LOOP_END on termination of loop
-
-FINAL_SHIFT
-				MOV R10, #-1
-				B SHIFT_SUMS
-REGULAR_SHIFT
-				MOV R10, #255
-				B SHIFT_SUMS
-SHIFT_SUMS
+				
+				WEND
+				
+				; This shifts values in to individual 32 bit registers
+				
 				AND R0, R4, #0xFF		; Remove other registers for to find number of p0 transitions
 				ADD R5, R5, R0
 				
@@ -189,9 +192,13 @@ SHIFT_SUMS
 				AND R0, R9, R4, lsr #24
 				ADD R8, R8, R0
 				
-				MOV R4, #0;
+				MOV R4, #0
+				
+				CMP R10, #1
+				
+				BPL M_LOOP
+				B FINISH
 
-				B		LOOP
 
 FINISH
 				LDR R12, =P0COUNT
@@ -208,20 +215,21 @@ FINISH
 				
 				B LOOP_END
 
-ISR_FUNC								; Interrupt must set variable to terminate main loop
-				B FINAL_SHIFT			; for skeleton code only		
-										; replace this by return from interrupt
-										; branch to LOOP_END will be at end of LOOP code
+ISR_FUNC		
+				MOV R10, #-1			; Interrupt must set variable to terminate main loop
+				;B FINAL_SHIFT			; for skeleton code only		
+				SUBS pc,lr,#4			; replace this by return from interrupt
+				B FINISH				; branch to LOOP_END will be at end of LOOP code
 
 ;--------------------------------------------------------------------------------------------
 ; PARAMETERS TO CONTROL SIMULATION, VALUES MAY BE CHANGED TO IMPLEMENT DIFFERENT TESTS
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
-SIM_TIME 		DCD  	10000	  ; length of simulation in cycles (100MHz clock)
-P0_PERIOD		DCD   	23        ; bit 0 input period in cycles
-P1_PERIOD		DCD   	22		  ; bit 8 input period in cycles
-P2_PERIOD		DCD  	21		  ; bit 16 input period	in cycles
-P3_PERIOD		DCD		20		  ; bit 24 input period	in cycles
+SIM_TIME 		DCD  	100000	  ; length of simulation in cycles (100MHz clock)
+P0_PERIOD		DCD   	13        ; bit 0 input period in cycles
+P1_PERIOD		DCD   	12		  ; bit 8 input period in cycles
+P2_PERIOD		DCD  	15		  ; bit 16 input period	in cycles
+P3_PERIOD		DCD		18		  ; bit 24 input period	in cycles
 ;---------------------DO NOT CHANGE AFTER THIS COMMENT---------------------------------------
 ;--------------------------------------------------------------------------------------------
 ;--------------------------------------------------------------------------------------------
