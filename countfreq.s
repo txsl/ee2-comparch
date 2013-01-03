@@ -131,11 +131,11 @@ Reset_Handler
 ;--------------------------------------------------------------------------------------------
 ;--------------------------------------------------------------------------------------------
 				; constant data used in counting loop
-Addr_FIOPIN		DCD		0x3FFFC014
+Addr_FIOPIN		DCD		0x3FFFC014		; 
 Addr_FIOMASK	DCD		0x3FFFC010
 Addr_SCS		DCD		0xE01FC1A0
 
-LTORG
+;LTORG
 START		    ; initialse	 counting loop
 				LDR R0, Addr_SCS		; These three lines set the MCU to use the FIOPIN interface, rather than IOPIN
 				MOV R1, #1				; bit0 = 1 enables FIOPIN usage (all other bits must be 0)
@@ -156,25 +156,25 @@ START		    ; initialse	 counting loop
 				MOV R10, #10			; Counts down from 255 to 0 to detect when to loop
 				LDR R11, =0x01010101	; Mask to AND with before processing IOPIN values
 				LDR R12, Addr_FIOPIN	; Mem location of FIOPIN
-				;todo add 1 in each byte so the mask is set correctly.
-				B M_LOOP
-				LTORG
+				
+				B LOOP					; branch to the main counting loop
+				
+				LTORG					; Directive here so that the code is put in the right place, so the literal pools are such we can use LDR
+LOOP
+				GBLA count				; declare global variable count
+count			SETA 0					; set count to 0
 
-M_LOOP
-				GBLA count
-count			SETA 0
+				WHILE count <=255		; We repeat this code (reaches down until the WEND directive) for 255 times
 
-				WHILE count <=255
-
-				IF count = 30
-					MOV R13, R4
-					MOV R4, #0
+				IF count = 30			; These if statements inject the following lines of code, and the respective loops 
+					MOV R13, R4			; Move the actual number of transitions counted per 255 loops to a 'shadow' copy in R13
+					MOV R4, #0			; Reset R4 to start counting again
 				ELIF count = 60
-					AND R0, R13, #0xFF
+					AND R0, R13, #0xFF	; Clear all values except the transitions counted for P0 
 				ELIF count = 90
-					ADD R5, R5, R0
+					ADD R5, R5, R0		; Add the number of counts in the last loop to the total for P0
 				ELIF count = 120
-					AND R0, R9, R13, lsr #8
+					AND R0, R9, R13, lsr #8 ; Clear all values except the transitions counted for P1. Done through 
 				ELIF count = 150
 					ADD R6, R6, R0
 				ELIF count = 180
@@ -187,35 +187,19 @@ count			SETA 0
 					ADD R8, R8, R0
 				ENDIF
 				
-count			SETA count+1
+count			SETA count+1			; Increment the value of count by 1
 				LDR R2, [R12]			; Move IO status to R2
 			;	AND R2, R11, R2
 				BIC R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
 				MOV R1, R2				; R1 arstores the previous state of the pins
-				ADD R4, R4, R3
+				ADD R4, R4, R3			; Add the newly counted counts with the ones which have previously been counted in this loop (stored in R4)
 				
-				WEND
+				WEND					; End WHILE loop directive
 				
-				; This shifts values in to individual 32 bit registers
+				CMP R10, #1				; Check to see if our interupt has fired. If it has, the result will be negative
 				
-				; AND R0, R4, #0xFF		; Remove other registers for to find number of p0 transitions
-				; ADD R5, R5, R0
-				
-				; AND R0, R9, R4, lsr #8
-				; ADD R6, R6, R0
-				
-				; AND R0, R9, R4, lsr #16
-				; ADD R7, R7, R0
-				
-				; AND R0, R9, R4, lsr #24
-				; ADD R8, R8, R0
-				
-				; MOV R4, #0
-				
-				CMP R10, #1
-				
-				BPL M_LOOP
-				B FINISH
+				BPL LOOP				; If the result is positive (ie interrupt has not fired), we should go back to the main loop
+				B FINISH				; If it is -ve (and interrupt fired), we should branch to the FINISH subroutine
 
 
 FINISH
@@ -231,19 +215,22 @@ FINISH
 				LDR R12, =P3COUNT
 				STR R8, [R12]
 				
-				B LOOP_END
+				B LOOP_END				; Branch to LOOP_END, where the code stops
 
 ISR_FUNC		
-				MOV R10, #-1			; Interrupt must set variable to terminate main loop
-				;B FINAL_SHIFT			; for skeleton code only		
-				SUBS pc,lr,#4			; replace this by return from interrupt
-				B FINISH				; branch to LOOP_END will be at end of LOOP code
+				MOV R10, #-1			; Set R10 to be -1, which will be detected at the end of the next main loop
+				SUBS pc,lr,#4			; Return to where we came from
+				
+										; Interrupt must set variable to terminate main loop
+										; for skeleton code only		
+										; replace this by return from interrupt
+										; branch to LOOP_END will be at end of LOOP code
 
 ;--------------------------------------------------------------------------------------------
 ; PARAMETERS TO CONTROL SIMULATION, VALUES MAY BE CHANGED TO IMPLEMENT DIFFERENT TESTS
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
-SIM_TIME 		DCD  	10000000	  ; length of simulation in cycles (100MHz clock)
+SIM_TIME 		DCD  	1000000	  ; length of simulation in cycles (100MHz clock)
 P0_PERIOD		DCD   	14		  ; bit 0 input period in cycles
 P1_PERIOD		DCD   	14		  ; bit 8 input period in cycles
 P2_PERIOD		DCD  	14		  ; bit 16 input period	in cycles
