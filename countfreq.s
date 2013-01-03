@@ -131,8 +131,14 @@ Reset_Handler
 ;--------------------------------------------------------------------------------------------
 ;--------------------------------------------------------------------------------------------
 				; constant data used in counting loop
+Addr_FIOPIN		DCD		0x3FFFC014
+Addr_FIOMASK	DCD		0x3FFFC010
+Addr_SCS		DCD		0xE01FC1A0
 
 START		    ; initialse	 counting loop
+				LDR R0, Addr_SCS		; These three lines set the MCU to use the FIOPIN interface, rather than IOPIN
+				MOV R1, #1				; bit0 = 1 enables FIOPIN usage (all other bits must be 0)
+				STR R1, [R0]
 										; R0 used as 'scratch' register
 				MOV R1, #0				; Set the 'history' on the pins to be 0
 				MOV R4, #0				; Set the total count to 0
@@ -143,8 +149,8 @@ START		    ; initialse	 counting loop
 				MOV R9, #0xFF			; Used to set mask for AND when calculating
 				MOV R10, #255			; Counts down from 255 to 0 to detect when to loop
 				LDR R11, =0x01010101	; Mask to AND with before processing IOPIN values
-				LDR R12, Addr_IOPIN		; Mem location of IOPIN
-				
+				LDR R12, Addr_FIOPIN		; Mem location of IOPIN
+				;todo add 1 in each byte so the mask is set correctly.
 				
 				
 				; main couting loop loops forever, interrupted at end of simulation
@@ -152,7 +158,7 @@ LOOP
 				LDR R2, [R12]			; Move IO status to R2
 				AND R2, R11, R2
 				BIC R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
-				MOV R1, R2				; Remember what R1 was
+				MOV R1, R2				; R1 stores the previous state of the pins
 				ADD R4, R4, R3
 				SUBS R10, R10, #1
 				BMI		FINISH
@@ -207,9 +213,9 @@ ISR_FUNC								; Interrupt must set variable to terminate main loop
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
 SIM_TIME 		DCD  	100000	  ; length of simulation in cycles (100MHz clock)
-P0_PERIOD		DCD   	26        ; bit 0 input period in cycles
+P0_PERIOD		DCD   	25        ; bit 0 input period in cycles
 P1_PERIOD		DCD   	26		  ; bit 8 input period in cycles
-P2_PERIOD		DCD  	26		  ; bit 16 input period	in cycles
+P2_PERIOD		DCD  	25		  ; bit 16 input period	in cycles
 P3_PERIOD		DCD		26		  ; bit 24 input period	in cycles
 ;---------------------DO NOT CHANGE AFTER THIS COMMENT---------------------------------------
 ;--------------------------------------------------------------------------------------------
