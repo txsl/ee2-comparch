@@ -155,7 +155,7 @@ START		    ; initialse	 counting loop
 				MOV R9, #0xFF			; Used to set mask for AND when calculating
 				MOV R10, #10			; Counts down from 255 to 0 to detect when to loop
 				LDR R11, =0x01010101	; Mask to AND with before processing IOPIN values
-				LDR R12, Addr_FIOPIN		; Mem location of IOPIN
+				LDR R12, Addr_FIOPIN	; Mem location of FIOPIN
 				;todo add 1 in each byte so the mask is set correctly.
 				B M_LOOP
 				LTORG
@@ -166,9 +166,27 @@ count			SETA 0
 
 				WHILE count <=255
 
-;				IF count = {50}
-;					NOP
-;				ENDIF
+				IF count = 30
+					MOV R13, R4
+					MOV R4, #0
+				ELIF count = 60
+					AND R0, R13, #0xFF
+				ELIF count = 90
+					ADD R5, R5, R0
+				ELIF count = 120
+					AND R0, R9, R13, lsr #8
+				ELIF count = 150
+					ADD R6, R6, R0
+				ELIF count = 180
+					AND R0, R9, R13, lsr #16
+				ELIF count = 210
+					ADD R7, R7, R0
+				ELIF count = 240
+					AND R0, R9, R13, lsr #24
+				ELIF count = 254
+					ADD R8, R8, R0
+				ENDIF
+				
 count			SETA count+1
 				LDR R2, [R12]			; Move IO status to R2
 			;	AND R2, R11, R2
@@ -180,19 +198,19 @@ count			SETA count+1
 				
 				; This shifts values in to individual 32 bit registers
 				
-				AND R0, R4, #0xFF		; Remove other registers for to find number of p0 transitions
-				ADD R5, R5, R0
+				; AND R0, R4, #0xFF		; Remove other registers for to find number of p0 transitions
+				; ADD R5, R5, R0
 				
-				AND R0, R9, R4, lsr #8
-				ADD R6, R6, R0
+				; AND R0, R9, R4, lsr #8
+				; ADD R6, R6, R0
 				
-				AND R0, R9, R4, lsr #16
-				ADD R7, R7, R0
+				; AND R0, R9, R4, lsr #16
+				; ADD R7, R7, R0
 				
-				AND R0, R9, R4, lsr #24
-				ADD R8, R8, R0
+				; AND R0, R9, R4, lsr #24
+				; ADD R8, R8, R0
 				
-				MOV R4, #0
+				; MOV R4, #0
 				
 				CMP R10, #1
 				
@@ -225,11 +243,11 @@ ISR_FUNC
 ; PARAMETERS TO CONTROL SIMULATION, VALUES MAY BE CHANGED TO IMPLEMENT DIFFERENT TESTS
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
-SIM_TIME 		DCD  	100000	  ; length of simulation in cycles (100MHz clock)
-P0_PERIOD		DCD   	13        ; bit 0 input period in cycles
-P1_PERIOD		DCD   	12		  ; bit 8 input period in cycles
-P2_PERIOD		DCD  	15		  ; bit 16 input period	in cycles
-P3_PERIOD		DCD		18		  ; bit 24 input period	in cycles
+SIM_TIME 		DCD  	10000000	  ; length of simulation in cycles (100MHz clock)
+P0_PERIOD		DCD   	14		  ; bit 0 input period in cycles
+P1_PERIOD		DCD   	14		  ; bit 8 input period in cycles
+P2_PERIOD		DCD  	14		  ; bit 16 input period	in cycles
+P3_PERIOD		DCD		14		  ; bit 24 input period	in cycles
 ;---------------------DO NOT CHANGE AFTER THIS COMMENT---------------------------------------
 ;--------------------------------------------------------------------------------------------
 ;--------------------------------------------------------------------------------------------
