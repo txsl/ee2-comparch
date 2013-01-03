@@ -139,6 +139,11 @@ START		    ; initialse	 counting loop
 				LDR R0, Addr_SCS		; These three lines set the MCU to use the FIOPIN interface, rather than IOPIN
 				MOV R1, #1				; bit0 = 1 enables FIOPIN usage (all other bits must be 0)
 				STR R1, [R0]
+				
+				LDR R0, Addr_FIOMASK	; These three lines set the FIOMASK so that they only read the pins we need to
+				LDR R1, =0xFEFEFEFE		; All others are ignored. This saves the commented out AND command in the main Loop.
+				STR R1, [R0]
+				
 										; R0 used as 'scratch' register
 				MOV R1, #0				; Set the 'history' on the pins to be 0
 				MOV R4, #0				; Set the total count to 0
@@ -156,7 +161,7 @@ START		    ; initialse	 counting loop
 				; main couting loop loops forever, interrupted at end of simulation
 LOOP		
 				LDR R2, [R12]			; Move IO status to R2
-				AND R2, R11, R2
+			;	AND R2, R11, R2
 				BIC R3, R2, R1			; XOR previous state of pins with current state. Will detect transition
 				MOV R1, R2				; R1 stores the previous state of the pins
 				ADD R4, R4, R3
@@ -212,11 +217,11 @@ ISR_FUNC								; Interrupt must set variable to terminate main loop
 ; PARAMETERS TO CONTROL SIMULATION, VALUES MAY BE CHANGED TO IMPLEMENT DIFFERENT TESTS
 ;--------------------------------------------------------------------------------------------
 SIMCONTROL
-SIM_TIME 		DCD  	100000	  ; length of simulation in cycles (100MHz clock)
-P0_PERIOD		DCD   	25        ; bit 0 input period in cycles
-P1_PERIOD		DCD   	26		  ; bit 8 input period in cycles
-P2_PERIOD		DCD  	25		  ; bit 16 input period	in cycles
-P3_PERIOD		DCD		26		  ; bit 24 input period	in cycles
+SIM_TIME 		DCD  	10000	  ; length of simulation in cycles (100MHz clock)
+P0_PERIOD		DCD   	23        ; bit 0 input period in cycles
+P1_PERIOD		DCD   	22		  ; bit 8 input period in cycles
+P2_PERIOD		DCD  	21		  ; bit 16 input period	in cycles
+P3_PERIOD		DCD		20		  ; bit 24 input period	in cycles
 ;---------------------DO NOT CHANGE AFTER THIS COMMENT---------------------------------------
 ;--------------------------------------------------------------------------------------------
 ;--------------------------------------------------------------------------------------------
